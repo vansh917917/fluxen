@@ -1,14 +1,25 @@
 # Dependencies
-node_modules
+node_modules/
 .pnp
 .pnp.js
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
 
 # Testing
-coverage
+coverage/
+.pytest_cache/
 
 # Production
-dist
-build
+dist/
+build/
 
 # Misc
 .DS_Store

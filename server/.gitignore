@@ -1,5 +1,9 @@
-node_modules
-# Keep environment variables out of version control
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.db
+*.sqlite
+*.sqlite3
+.pytest_cache/
 .env
-
-/src/generated/prisma

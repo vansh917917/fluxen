@@ -1,273 +1,226 @@
 # Fluxen
 
-Fluxen is a lightweight, full-stack personal task management web application built with React, TypeScript, Vite, Tailwind CSS, Express, Prisma, and PostgreSQL.
+Fluxen is a lightweight, full-stack personal task management application built with Python FastAPI, SQLite, and a React (TypeScript + Vite + Tailwind CSS) frontend.
 
 ## Architecture
 
-The project contains two separate standalone applications in a single repository:
+The project consists of two clean, decoupled applications:
 
-- `server`: Express REST API in TypeScript with Prisma ORM and PostgreSQL.
-- `client`: Single-page application in React, TypeScript, and Tailwind CSS built with Vite.
-
-This decoupled architecture allows deploying the frontend and backend on two separate hosting targets, such as two distinct AWS EC2 instances.
+- `server`: Python FastAPI REST API with SQLAlchemy ORM and an automatic local SQLite database (`fluxen.db`).
+- `client`: React SPA built with TypeScript, Vite, and Tailwind CSS.
 
 ---
 
-## Local Development Setup
+## Quick Start (Local Setup)
 
 ### Prerequisites
 
-- Node.js 18+ (tested on Node 22)
-- npm 10+
-- PostgreSQL database (local, containerized, or managed)
+- Python 3.10+ (tested on Python 3.13)
+- Node.js 18+ and npm
 
-### 1. Install Dependencies
+### 1. Start the Backend
 
-Install dependencies for both frontend and backend:
+1. Navigate to `server` and create a virtual environment:
+   ```bash
+   cd server
+   python -m venv venv
+   ```
 
-```bash
-npm run install:all
-```
+2. Activate the virtual environment:
+   - **Windows**:
+     ```powershell
+     .\venv\Scripts\activate
+     ```
+   - **Linux / macOS**:
+     ```bash
+     source venv/bin/activate
+     ```
 
-Alternatively:
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-```bash
-cd server && npm install
-cd ../client && npm install
-```
+4. Run the server (auto-creates `fluxen.db`):
+   ```bash
+   python run.py
+   ```
+   Backend runs at: `http://localhost:5000` (interactive API docs at `http://localhost:5000/docs`).
 
-### 2. Configure Environment Variables
+### 2. Start the Frontend
 
-**Backend (`server/.env`)**:
+In a second terminal:
 
-Create `server/.env` based on `server/.env.example`:
+1. Navigate to `client`:
+   ```bash
+   cd client
+   npm install
+   ```
 
-```env
-PORT=5000
-NODE_ENV=development
-CLIENT_URL=http://localhost:5173
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/fluxen_db?schema=public"
-JWT_SECRET=replace_with_a_secure_jwt_secret_key
-SESSION_SECRET=replace_with_a_secure_session_secret_key
-```
+2. Start development server:
+   ```bash
+   npm run dev
+   ```
+   Frontend runs at: `http://localhost:5173`.
 
-**Frontend (`client/.env`)**:
+---
 
-Create `client/.env` based on `client/.env.example`:
+## Running Tests
 
-```env
-VITE_API_BASE_URL=http://localhost:5000/api
-```
-
-### 3. Initialize Database and Run Migrations
-
-From the root directory or inside `server`:
+Run backend tests using pytest:
 
 ```bash
 cd server
-npx prisma generate
-npx prisma migrate deploy
-```
-
-### 4. Run the Development Servers
-
-Open two terminals:
-
-Terminal 1 (Backend API):
-```bash
-npm run dev:server
-```
-Runs at `http://localhost:5000`
-
-Terminal 2 (Frontend Client):
-```bash
-npm run dev:client
-```
-Runs at `http://localhost:5173`
-
-### 5. Running Tests
-
-Run backend unit tests for validation schemas, password hashing, and authentication tokens:
-
-```bash
-npm test
+venv\Scripts\pytest
 ```
 
 ---
 
-## Local Docker Deployment (Optional)
+## One-Command Docker Setup
 
-To run the complete system (PostgreSQL, backend, and frontend) in Docker:
+Run both the FastAPI backend and React frontend with Docker Compose:
 
 ```bash
 docker compose up --build -d
 ```
 
-Frontend will be available at `http://localhost:80` and backend at `http://localhost:5000`.
+- Frontend: `http://localhost:80`
+- Backend API: `http://localhost:5000`
 
 ---
 
 ## Deploying to Two AWS EC2 Instances
 
-### Architecture Overview
+### Overview
 
-```
-User Browser
-    │
-    ├─── HTTP (Port 80) ────> [ EC2 Instance 1: Frontend ]
-    │                         Nginx serving React build
-    │
-    └─── REST (Port 5000) ──> [ EC2 Instance 2: Backend ]
-                              Express API + Prisma ORM
-                                      │
-                                      ▼
-                              [ PostgreSQL Database ]
-                              (Local on Backend EC2 or AWS RDS)
-```
+- **Instance 1 (Backend)**: Python FastAPI with Uvicorn (managed by systemd or PM2) on port 5000.
+- **Instance 2 (Frontend)**: React production build served via Nginx on port 80.
 
-### Step 1: Launch EC2 Instances
+### Step 1: Launch Two EC2 Instances
 
-Launch two Amazon EC2 instances (Ubuntu 22.04 LTS or 24.04 LTS recommended, `t3.micro` or `t3.small`):
+Launch two Amazon EC2 Ubuntu instances (`t3.micro` or `t3.nano`):
+1. `fluxen-backend`
+2. `fluxen-frontend`
 
-1. **Instance 1 (Backend)**: Name: `fluxen-backend`
-2. **Instance 2 (Frontend)**: Name: `fluxen-frontend`
+### Step 2: Configure Security Groups
 
-### Step 2: Configure AWS Security Groups
-
-**Backend Security Group (`fluxen-backend-sg`)**:
-- Port 22 (SSH): Your IP
-- Port 5000 (Custom TCP): Anywhere (`0.0.0.0/0`) or restricted to Frontend EC2 Public IP
-- Port 5432 (PostgreSQL): Only required if database is hosted on this instance and accessed externally
-
-**Frontend Security Group (`fluxen-frontend-sg`)**:
-- Port 22 (SSH): Your IP
-- Port 80 (HTTP): Anywhere (`0.0.0.0/0`)
-- Port 443 (HTTPS): Anywhere (`0.0.0.0/0`)
+- **Backend SG**: Inbound TCP port 5000 (from anywhere or restricted to Frontend IP), port 22 (SSH).
+- **Frontend SG**: Inbound TCP port 80 (HTTP) and port 443 (HTTPS) from anywhere, port 22 (SSH).
 
 ---
 
 ### Step 3: Setup Backend EC2 Instance
 
 1. SSH into the backend instance:
-```bash
-ssh -i your-key.pem ubuntu@<BACKEND_PUBLIC_IP>
-```
+   ```bash
+   ssh -i your-key.pem ubuntu@<BACKEND_PUBLIC_IP>
+   ```
 
-2. Install Node.js, npm, Git, and PostgreSQL:
-```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y git curl postgresql postgresql-contrib
+2. Install Python and Git:
+   ```bash
+   sudo apt update && sudo apt upgrade -y
+   sudo apt install -y python3-pip python3-venv git
+   ```
 
-# Install Node.js 22 LTS
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
-```
+3. Clone the repository:
+   ```bash
+   git clone https://github.com/vansh917917/fluxen.git
+   cd fluxen/server
+   ```
 
-3. Set up PostgreSQL:
-```bash
-sudo -u postgres psql -c "CREATE USER fluxenuser WITH PASSWORD 'secure_db_password';"
-sudo -u postgres psql -c "CREATE DATABASE fluxen_db OWNER fluxenuser;"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE fluxen_db TO fluxenuser;"
-```
+4. Set up virtual environment and install dependencies:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
 
-4. Clone the repository and configure:
-```bash
-git clone https://github.com/vansh917917/fluxen.git
-cd fluxen/server
-npm install
-```
+5. Configure `.env`:
+   ```bash
+   cat << 'EOF' > .env
+   PORT=5000
+   NODE_ENV=production
+   CLIENT_URL=http://<FRONTEND_PUBLIC_IP>
+   DATABASE_URL=sqlite:///./fluxen.db
+   JWT_SECRET=generate_a_secure_random_secret_here
+   EOF
+   ```
 
-5. Create `.env` file:
-```bash
-nano .env
-```
-Fill in the values:
-```env
-PORT=5000
-NODE_ENV=production
-CLIENT_URL=http://<FRONTEND_PUBLIC_IP>
-DATABASE_URL="postgresql://fluxenuser:secure_db_password@localhost:5432/fluxen_db?schema=public"
-JWT_SECRET=generate_a_random_32_character_secret_here
-SESSION_SECRET=generate_another_random_secret_here
-```
+6. Run FastAPI as a systemd service:
+   ```bash
+   sudo cat << 'EOF' > /etc/systemd/system/fluxen.service
+   [Unit]
+   Description=Fluxen FastAPI Backend Service
+   After=network.target
 
-6. Generate Prisma client, apply migrations, and build:
-```bash
-npx prisma generate
-npx prisma migrate deploy
-npm run build
-```
+   [Service]
+   User=ubuntu
+   WorkingDirectory=/home/ubuntu/fluxen/server
+   ExecStart=/home/ubuntu/fluxen/server/venv/bin/python run.py
+   Restart=always
+   RestartSec=5
+   EnvironmentFile=/home/ubuntu/fluxen/server/.env
 
-7. Run with PM2 for background process management:
-```bash
-sudo npm install -g pm2
-pm2 start dist/index.js --name fluxen-backend
-pm2 save
-pm2 startup
-```
+   [Install]
+   WantedBy=multi-user.target
+   EOF
 
-Verify backend health:
-```bash
-curl http://localhost:5000/health
-```
+   sudo systemctl daemon-reload
+   sudo systemctl enable fluxen
+   sudo systemctl start fluxen
+   ```
+
+7. Check health:
+   ```bash
+   curl http://localhost:5000/health
+   ```
 
 ---
 
 ### Step 4: Setup Frontend EC2 Instance
 
 1. SSH into the frontend instance:
-```bash
-ssh -i your-key.pem ubuntu@<FRONTEND_PUBLIC_IP>
-```
+   ```bash
+   ssh -i your-key.pem ubuntu@<FRONTEND_PUBLIC_IP>
+   ```
 
-2. Install Node.js, npm, Git, and Nginx:
-```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y git nginx curl
+2. Install Node.js, Git, and Nginx:
+   ```bash
+   sudo apt update && sudo apt upgrade -y
+   sudo apt install -y git nginx curl
+   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+   sudo apt install -y nodejs
+   ```
 
-# Install Node.js 22 LTS
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
-```
+3. Clone repository and install dependencies:
+   ```bash
+   git clone https://github.com/vansh917917/fluxen.git
+   cd fluxen/client
+   npm install
+   ```
 
-3. Clone the repository and install dependencies:
-```bash
-git clone https://github.com/vansh917917/fluxen.git
-cd fluxen/client
-npm install
-```
+4. Configure `.env` with backend EC2 IP:
+   ```bash
+   echo "VITE_API_BASE_URL=http://<BACKEND_PUBLIC_IP>:5000/api" > .env
+   ```
 
-4. Configure `.env` with the backend EC2 IP:
-```bash
-nano .env
-```
-Set the backend API endpoint:
-```env
-VITE_API_BASE_URL=http://<BACKEND_PUBLIC_IP>:5000/api
-```
+5. Build the React frontend:
+   ```bash
+   npm run build
+   ```
 
-5. Build the frontend:
-```bash
-npm run build
-```
+6. Deploy to Nginx:
+   ```bash
+   sudo mkdir -p /var/www/fluxen
+   sudo cp -r dist/* /var/www/fluxen/
+   sudo cp nginx.conf /etc/nginx/sites-available/fluxen
+   sudo ln -sf /etc/nginx/sites-available/fluxen /etc/nginx/sites-enabled/
+   sudo rm -f /etc/nginx/sites-enabled/default
+   sudo nginx -t
+   sudo systemctl restart nginx
+   ```
 
-6. Deploy build to web directory:
-```bash
-sudo mkdir -p /var/www/fluxen
-sudo cp -r dist/* /var/www/fluxen/
-sudo chown -R www-data:www-data /var/www/fluxen
-```
-
-7. Configure Nginx:
-```bash
-sudo cp nginx.conf /etc/nginx/sites-available/fluxen
-sudo ln -sf /etc/nginx/sites-available/fluxen /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-8. Open `http://<FRONTEND_PUBLIC_IP>` in your web browser. Fluxen is now live!
+7. Open `http://<FRONTEND_PUBLIC_IP>` in your browser.
 
 ---
 
