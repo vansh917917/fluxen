@@ -76,19 +76,6 @@ venv\Scripts\pytest
 
 ---
 
-## One-Command Docker Setup
-
-Run both the FastAPI backend and React frontend with Docker Compose:
-
-```bash
-docker compose up --build -d
-```
-
-- Frontend: `http://localhost:80`
-- Backend API: `http://localhost:5000`
-
----
-
 ## Deploying to Two AWS EC2 Instances
 
 ### Overview
