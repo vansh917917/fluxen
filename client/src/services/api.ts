@@ -1,0 +1,132 @@
+import type { Task, User, AuthResponse, FilterStatus } from '../types';
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+const TOKEN_STORAGE_KEY = 'fluxen_auth_token';
+
+export const getToken = (): string | null => {
+  return localStorage.getItem(TOKEN_STORAGE_KEY);
+};
+
+export const setToken = (token: string): void => {
+  localStorage.setItem(TOKEN_STORAGE_KEY, token);
+};
+
+export const clearToken = (): void => {
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+};
+
+async function request<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = getToken();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    credentials: 'include',
+    headers,
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const errorMessage =
+      data.error ||
+      `Request failed with status ${response.status} (${response.statusText})`;
+    throw new Error(errorMessage);
+  }
+
+  return data as T;
+}
+
+export const api = {
+  auth: {
+    register: async (email: string, password: string): Promise<AuthResponse> => {
+      const result = await request<AuthResponse>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      if (result.token) {
+        setToken(result.token);
+      }
+      return result;
+    },
+
+    login: async (email: string, password: string): Promise<AuthResponse> => {
+      const result = await request<AuthResponse>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      if (result.token) {
+        setToken(result.token);
+      }
+      return result;
+    },
+
+    logout: async (): Promise<{ message: string }> => {
+      try {
+        return await request<{ message: string }>('/auth/logout', {
+          method: 'POST',
+        });
+      } finally {
+        clearToken();
+      }
+    },
+
+    getMe: async (): Promise<{ user: User }> => {
+      return request<{ user: User }>('/auth/me');
+    },
+  },
+
+  tasks: {
+    getAll: async (status?: FilterStatus): Promise<{ tasks: Task[] }> => {
+      const query = status && status !== 'all' ? `?status=${status}` : '';
+      return request<{ tasks: Task[] }>(`/tasks${query}`);
+    },
+
+    getById: async (id: string): Promise<{ task: Task }> => {
+      return request<{ task: Task }>(`/tasks/${id}`);
+    },
+
+    create: async (data: {
+      title: string;
+      description?: string;
+    }): Promise<{ task: Task; message: string }> => {
+      return request<{ task: Task; message: string }>('/tasks', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+
+    update: async (
+      id: string,
+      data: {
+        title?: string;
+        description?: string | null;
+        completed?: boolean;
+      }
+    ): Promise<{ task: Task; message: string }> => {
+      return request<{ task: Task; message: string }>(`/tasks/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+    },
+
+    delete: async (id: string): Promise<{ message: string }> => {
+      return request<{ message: string }>(`/tasks/${id}`, {
+        method: 'DELETE',
+      });
+    },
+  },
+};
