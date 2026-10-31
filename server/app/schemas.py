@@ -1,6 +1,8 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Literal
 from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
+
+PriorityLevel = Literal["urgent", "high", "medium", "low"]
 
 
 class UserRegisterSchema(BaseModel):
@@ -24,11 +26,6 @@ class UserResponse(BaseModel):
         serialize_by_alias=True,
     )
 
-    @field_validator("createdAt", mode="before")
-    @classmethod
-    def set_created_at(cls, v):
-        return v
-
 
 class AuthResponse(BaseModel):
     user: UserResponse
@@ -41,6 +38,11 @@ class AuthResponse(BaseModel):
 class TaskCreateSchema(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=2000)
+    priority: Optional[PriorityLevel] = "medium"
+    dueDate: Optional[datetime] = Field(None, alias="dueDate")
+    tag: Optional[str] = Field(None, max_length=50)
+
+    model_config = ConfigDict(populate_by_name=True)
 
     @field_validator("title")
     @classmethod
@@ -58,11 +60,27 @@ class TaskCreateSchema(BaseModel):
         trimmed = v.strip()
         return trimmed if trimmed else None
 
+    @field_validator("tag")
+    @classmethod
+    def clean_tag(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        trimmed = v.strip().lower()
+        # Remove any leading hash if user types #work
+        if trimmed.startswith("#"):
+            trimmed = trimmed[1:].strip()
+        return trimmed if trimmed else None
+
 
 class TaskUpdateSchema(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=2000)
     completed: Optional[bool] = None
+    priority: Optional[PriorityLevel] = None
+    dueDate: Optional[datetime] = Field(None, alias="dueDate")
+    tag: Optional[str] = Field(None, max_length=50)
+
+    model_config = ConfigDict(populate_by_name=True)
 
     @field_validator("title")
     @classmethod
@@ -82,6 +100,16 @@ class TaskUpdateSchema(BaseModel):
         trimmed = v.strip()
         return trimmed if trimmed else None
 
+    @field_validator("tag")
+    @classmethod
+    def clean_tag(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        trimmed = v.strip().lower()
+        if trimmed.startswith("#"):
+            trimmed = trimmed[1:].strip()
+        return trimmed if trimmed else None
+
 
 class TaskResponse(BaseModel):
     id: str
@@ -89,6 +117,9 @@ class TaskResponse(BaseModel):
     title: str
     description: Optional[str] = None
     completed: bool
+    priority: str
+    dueDate: Optional[datetime] = Field(None, alias="dueDate")
+    tag: Optional[str] = None
     createdAt: datetime = Field(..., alias="createdAt")
     updatedAt: datetime = Field(..., alias="updatedAt")
 
@@ -108,6 +139,17 @@ class TaskListResponse(BaseModel):
 class TaskItemResponse(BaseModel):
     task: TaskResponse
     message: Optional[str] = None
+
+    model_config = ConfigDict(serialize_by_alias=True)
+
+
+class TaskStatsResponse(BaseModel):
+    total: int
+    pending: int
+    completed: int
+    completedToday: int
+    overdue: int
+    urgent: int
 
     model_config = ConfigDict(serialize_by_alias=True)
 

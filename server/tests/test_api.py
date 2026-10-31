@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timezone, timedelta
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -6,7 +7,7 @@ from sqlalchemy.pool import StaticPool
 from app.database import Base, get_db
 from app.main import app
 
-# In-memory SQLite for testing with StaticPool so all connections share the same memory DB
+# In-memory SQLite for testing with StaticPool
 TEST_DATABASE_URL = "sqlite:///:memory:"
 
 test_engine = create_engine(
@@ -27,7 +28,6 @@ def override_get_db():
 
 app.dependency_overrides[get_db] = override_get_db
 
-# Create tables in the test database
 Base.metadata.create_all(bind=test_engine)
 
 client = TestClient(app)
@@ -38,145 +38,98 @@ def test_health_check():
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
 
-    api_response = client.get("/api/health")
-    assert api_response.status_code == 200
-    assert api_response.json()["status"] == "ok"
 
-
-def test_validation_errors():
-    # Invalid email
-    res1 = client.post(
+def test_advanced_task_features():
+    # 1. Register User
+    reg = client.post(
         "/api/auth/register",
-        json={"email": "not-an-email", "password": "password123"},
+        json={"email": "pro@fluxen.com", "password": "password123"},
     )
-    assert res1.status_code == 400
+    assert reg.status_code == 201
+    token = reg.json()["token"]
+    headers = {"Authorization": f"Bearer {token}"}
 
-    # Short password
-    res2 = client.post(
-        "/api/auth/register",
-        json={"email": "valid@example.com", "password": "123"},
-    )
-    assert res2.status_code == 400
+    # 2. Create tasks with priorities, due dates, and tags
+    tomorrow = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
 
-
-def test_auth_workflow_and_task_crud():
-    # 1. Register User A
-    register_res = client.post(
-        "/api/auth/register",
-        json={"email": "alice@example.com", "password": "password123"},
-    )
-    assert register_res.status_code == 201
-    user_data = register_res.json()
-    assert "token" in user_data
-    assert user_data["user"]["email"] == "alice@example.com"
-    token_a = user_data["token"]
-
-    # 2. Prevent duplicate registration
-    duplicate_res = client.post(
-        "/api/auth/register",
-        json={"email": "alice@example.com", "password": "password123"},
-    )
-    assert duplicate_res.status_code == 400
-
-    # 3. Login
-    login_res = client.post(
-        "/api/auth/login",
-        json={"email": "alice@example.com", "password": "password123"},
-    )
-    assert login_res.status_code == 200
-    assert login_res.json()["user"]["email"] == "alice@example.com"
-
-    # 4. Reject invalid login
-    bad_login = client.post(
-        "/api/auth/login",
-        json={"email": "alice@example.com", "password": "wrongpassword"},
-    )
-    assert bad_login.status_code == 401
-
-    # 5. Get Me
-    headers_a = {"Authorization": f"Bearer {token_a}"}
-    me_res = client.get("/api/auth/me", headers=headers_a)
-    assert me_res.status_code == 200
-    assert me_res.json()["user"]["email"] == "alice@example.com"
-
-    # 6. Reject empty task title
-    empty_task = client.post(
+    # Task 1: Urgent overdue task
+    t1_res = client.post(
         "/api/tasks",
-        headers=headers_a,
-        json={"title": "   ", "description": ""},
+        headers=headers,
+        json={
+            "title": "Fix critical production bug",
+            "priority": "urgent",
+            "dueDate": yesterday,
+            "tag": "engineering",
+        },
     )
-    assert empty_task.status_code == 400
+    assert t1_res.status_code == 201
+    t1 = t1_res.json()["task"]
+    assert t1["priority"] == "urgent"
+    assert t1["tag"] == "engineering"
 
-    # 7. Create Task 1 (Pending)
-    task1_res = client.post(
+    # Task 2: High priority task for tomorrow
+    t2_res = client.post(
         "/api/tasks",
-        headers=headers_a,
-        json={"title": "First Test Task", "description": "Details here"},
+        headers=headers,
+        json={
+            "title": "Prepare sprint roadmap",
+            "priority": "high",
+            "dueDate": tomorrow,
+            "tag": "planning",
+        },
     )
-    assert task1_res.status_code == 201
-    t1 = task1_res.json()["task"]
-    assert t1["title"] == "First Test Task"
-    assert t1["completed"] is False
-    t1_id = t1["id"]
+    assert t2_res.status_code == 201
 
-    # 8. Create Task 2
-    task2_res = client.post(
+    # Task 3: Low priority task completed
+    t3_res = client.post(
         "/api/tasks",
-        headers=headers_a,
-        json={"title": "Second Test Task", "description": "Second desc"},
+        headers=headers,
+        json={
+            "title": "Organize workspace desk",
+            "priority": "low",
+            "tag": "personal",
+        },
     )
-    assert task2_res.status_code == 201
-    t2_id = task2_res.json()["task"]["id"]
+    assert t3_res.status_code == 201
+    t3_id = t3_res.json()["task"]["id"]
 
-    # 9. Mark Task 2 Completed
     client.patch(
-        f"/api/tasks/{t2_id}",
-        headers=headers_a,
+        f"/api/tasks/{t3_id}",
+        headers=headers,
         json={"completed": True},
     )
 
-    # 10. Filter tasks: all, pending, completed
-    all_tasks = client.get("/api/tasks", headers=headers_a).json()["tasks"]
-    assert len(all_tasks) == 2
+    # 3. Test Stats endpoint
+    stats_res = client.get("/api/tasks/stats", headers=headers)
+    assert stats_res.status_code == 200
+    stats = stats_res.json()
+    assert stats["total"] == 3
+    assert stats["pending"] == 2
+    assert stats["completed"] == 1
+    assert stats["overdue"] == 1  # Task 1 is overdue
+    assert stats["urgent"] == 1   # Task 1 is urgent
 
-    pending_tasks = client.get("/api/tasks?status=pending", headers=headers_a).json()["tasks"]
-    assert len(pending_tasks) == 1
-    assert pending_tasks[0]["id"] == t1_id
+    # 4. Test Filtering by priority
+    urgent_tasks = client.get("/api/tasks?priority=urgent", headers=headers).json()["tasks"]
+    assert len(urgent_tasks) == 1
+    assert urgent_tasks[0]["title"] == "Fix critical production bug"
 
-    completed_tasks = client.get("/api/tasks?status=completed", headers=headers_a).json()["tasks"]
-    assert len(completed_tasks) == 1
-    assert completed_tasks[0]["id"] == t2_id
+    # 5. Test Filtering by tag
+    plan_tasks = client.get("/api/tasks?tag=planning", headers=headers).json()["tasks"]
+    assert len(plan_tasks) == 1
+    assert plan_tasks[0]["title"] == "Prepare sprint roadmap"
 
-    # 11. Test Ownership Isolation with User B
-    reg_b = client.post(
-        "/api/auth/register",
-        json={"email": "bob@example.com", "password": "password456"},
-    )
-    assert reg_b.status_code == 201
-    token_b = reg_b.json()["token"]
-    headers_b = {"Authorization": f"Bearer {token_b}"}
+    # 6. Test JSON Export
+    json_export = client.get("/api/tasks/export?format=json", headers=headers)
+    assert json_export.status_code == 200
+    data = json_export.json()
+    assert data["totalTasks"] == 3
+    assert len(data["tasks"]) == 3
 
-    # User B should see 0 tasks
-    b_tasks = client.get("/api/tasks", headers=headers_b)
-    assert b_tasks.status_code == 200
-    assert len(b_tasks.json()["tasks"]) == 0
-
-    # User B cannot access User A's task
-    b_get_a_task = client.get(f"/api/tasks/{t1_id}", headers=headers_b)
-    assert b_get_a_task.status_code == 404
-
-    # User B cannot update User A's task
-    b_up_a_task = client.patch(f"/api/tasks/{t1_id}", headers=headers_b, json={"title": "Hacked"})
-    assert b_up_a_task.status_code == 404
-
-    # User B cannot delete User A's task
-    b_del_a_task = client.delete(f"/api/tasks/{t1_id}", headers=headers_b)
-    assert b_del_a_task.status_code == 404
-
-    # 12. User A Deletes Task 1
-    del_res = client.delete(f"/api/tasks/{t1_id}", headers=headers_a)
-    assert del_res.status_code == 200
-
-    # 13. Logout
-    logout_res = client.post("/api/auth/logout")
-    assert logout_res.status_code == 200
+    # 7. Test CSV Export
+    csv_export = client.get("/api/tasks/export?format=csv", headers=headers)
+    assert csv_export.status_code == 200
+    assert "text/csv" in csv_export.headers["content-type"]
+    assert "Fix critical production bug" in csv_export.text

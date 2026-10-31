@@ -37,6 +37,9 @@ class Task(Base):
     title = Column(String(200), nullable=False)
     description = Column(String(2000), nullable=True)
     completed = Column(Boolean, default=False, nullable=False)
+    priority = Column(String(20), default="medium", nullable=False)  # urgent, high, medium, low
+    due_date = Column(DateTime(timezone=True), nullable=True)
+    tag = Column(String(50), nullable=True)
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 
@@ -44,4 +47,5 @@ class Task(Base):
 
     __table_args__ = (
         Index("ix_tasks_user_id", "user_id"),
+        Index("ix_tasks_user_completed", "user_id", "completed"),
     )
