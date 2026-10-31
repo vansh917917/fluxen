@@ -1,7 +1,14 @@
-import type { Task, User, AuthResponse, FilterStatus } from '../types';
+import type {
+  Task,
+  User,
+  AuthResponse,
+  FilterStatus,
+  PriorityLevel,
+  SortOption,
+  TaskStats,
+} from '../types';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const TOKEN_STORAGE_KEY = 'fluxen_auth_token';
 
@@ -90,9 +97,33 @@ export const api = {
   },
 
   tasks: {
-    getAll: async (status?: FilterStatus): Promise<{ tasks: Task[] }> => {
-      const query = status && status !== 'all' ? `?status=${status}` : '';
-      return request<{ tasks: Task[] }>(`/tasks${query}`);
+    getAll: async (params?: {
+      status?: FilterStatus;
+      priority?: PriorityLevel;
+      tag?: string;
+      sort?: SortOption;
+    }): Promise<{ tasks: Task[] }> => {
+      const queryParams = new URLSearchParams();
+      if (params?.status && params.status !== 'all') {
+        queryParams.set('status', params.status);
+      }
+      if (params?.priority) {
+        queryParams.set('priority', params.priority);
+      }
+      if (params?.tag) {
+        queryParams.set('tag', params.tag);
+      }
+      if (params?.sort) {
+        queryParams.set('sort', params.sort);
+      }
+
+      const queryString = queryParams.toString();
+      const endpoint = queryString ? `/tasks?${queryString}` : '/tasks';
+      return request<{ tasks: Task[] }>(endpoint);
+    },
+
+    getStats: async (): Promise<TaskStats> => {
+      return request<TaskStats>('/tasks/stats');
     },
 
     getById: async (id: string): Promise<{ task: Task }> => {
@@ -102,6 +133,9 @@ export const api = {
     create: async (data: {
       title: string;
       description?: string;
+      priority?: PriorityLevel;
+      dueDate?: string | null;
+      tag?: string;
     }): Promise<{ task: Task; message: string }> => {
       return request<{ task: Task; message: string }>('/tasks', {
         method: 'POST',
@@ -115,6 +149,9 @@ export const api = {
         title?: string;
         description?: string | null;
         completed?: boolean;
+        priority?: PriorityLevel;
+        dueDate?: string | null;
+        tag?: string | null;
       }
     ): Promise<{ task: Task; message: string }> => {
       return request<{ task: Task; message: string }>(`/tasks/${id}`, {
@@ -127,6 +164,24 @@ export const api = {
       return request<{ message: string }>(`/tasks/${id}`, {
         method: 'DELETE',
       });
+    },
+
+    exportData: async (format: 'json' | 'csv'): Promise<Blob | object> => {
+      const token = getToken();
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_BASE_URL}/tasks/export?format=${format}`, {
+        credentials: 'include',
+        headers,
+      });
+
+      if (!res.ok) throw new Error('Failed to export tasks');
+
+      if (format === 'csv') {
+        return res.blob();
+      }
+      return res.json();
     },
   },
 };

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import type { Task } from '../types';
-import { Check, Edit2, Trash2, Calendar, AlertTriangle } from 'lucide-react';
+import { Check, Edit2, Trash2, Calendar, AlertTriangle, Flag, Tag as TagIcon } from 'lucide-react';
 
 interface TaskCardProps {
   task: Task;
   onToggleComplete: (id: string, completed: boolean) => Promise<void>;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => Promise<void>;
+  onTagClick?: (tag: string) => void;
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({
@@ -14,6 +15,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onToggleComplete,
   onEdit,
   onDelete,
+  onTagClick,
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -39,17 +41,50 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  const formattedDate = new Date(task.createdAt).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  // Due date calculations
+  const dueDateInfo = (() => {
+    if (!task.dueDate) return null;
+    const due = new Date(task.dueDate);
+    const now = new Date();
+    // Normalize to start of day
+    const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const diffDays = Math.round((dueDay - today) / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0 && !task.completed) {
+      return { text: `Overdue by ${Math.abs(diffDays)}d`, isOverdue: true };
+    }
+    if (diffDays === 0) {
+      return { text: 'Due Today', isToday: true };
+    }
+    if (diffDays === 1) {
+      return { text: 'Due Tomorrow', isTomorrow: true };
+    }
+    return {
+      text: due.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+      isRegular: true,
+    };
+  })();
+
+  const priorityBadge = (() => {
+    switch (task.priority) {
+      case 'urgent':
+        return { label: 'Urgent', style: 'bg-rose-50 text-rose-700 border-rose-200' };
+      case 'high':
+        return { label: 'High', style: 'bg-amber-50 text-amber-700 border-amber-200' };
+      case 'medium':
+        return { label: 'Medium', style: 'bg-blue-50 text-blue-700 border-blue-200' };
+      case 'low':
+      default:
+        return { label: 'Low', style: 'bg-slate-100 text-slate-600 border-slate-200' };
+    }
+  })();
 
   return (
     <div
       className={`p-4 rounded-lg border transition-all ${
         task.completed
-          ? 'bg-slate-50/70 border-slate-200'
+          ? 'bg-slate-50/60 border-slate-200 opacity-80'
           : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
       }`}
     >
@@ -73,19 +108,41 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </button>
 
           <div className="flex-1 min-w-0">
-            <h3
-              className={`text-sm font-medium break-words ${
-                task.completed
-                  ? 'line-through text-slate-400'
-                  : 'text-slate-900 font-semibold'
-              }`}
-            >
-              {task.title}
-            </h3>
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <h3
+                className={`text-sm break-words ${
+                  task.completed
+                    ? 'line-through text-slate-400 font-medium'
+                    : 'text-slate-900 font-semibold'
+                }`}
+              >
+                {task.title}
+              </h3>
+
+              {/* Priority badge */}
+              <span
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${priorityBadge.style}`}
+              >
+                <Flag className="w-2.5 h-2.5" />
+                {priorityBadge.label}
+              </span>
+
+              {/* Tag chip */}
+              {task.tag && (
+                <button
+                  type="button"
+                  onClick={() => onTagClick?.(task.tag!)}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors"
+                >
+                  <TagIcon className="w-2.5 h-2.5 text-slate-500" />
+                  #{task.tag}
+                </button>
+              )}
+            </div>
 
             {task.description && (
               <p
-                className={`mt-1 text-xs break-words whitespace-pre-line leading-relaxed ${
+                className={`text-xs break-words whitespace-pre-line leading-relaxed ${
                   task.completed ? 'text-slate-400 line-through' : 'text-slate-600'
                 }`}
               >
@@ -93,11 +150,23 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               </p>
             )}
 
-            <div className="mt-2.5 flex items-center gap-3 text-[11px] text-slate-400">
-              <span className="inline-flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                {formattedDate}
-              </span>
+            {/* Meta row: Due date & status */}
+            <div className="mt-2.5 flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
+              {dueDateInfo && (
+                <span
+                  className={`inline-flex items-center gap-1 font-medium ${
+                    dueDateInfo.isOverdue
+                      ? 'text-rose-600 font-bold'
+                      : dueDateInfo.isToday
+                      ? 'text-amber-700 font-semibold'
+                      : 'text-slate-500'
+                  }`}
+                >
+                  <Calendar className="w-3 h-3" />
+                  {dueDateInfo.text}
+                </span>
+              )}
+
               <span
                 className={`px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider ${
                   task.completed
