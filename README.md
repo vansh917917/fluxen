@@ -1,22 +1,21 @@
 # Fluxen
 
-Fluxen is a lightweight, full-stack personal task management application built with Python FastAPI, SQLite, and a React (TypeScript + Vite + Tailwind CSS) frontend.
+Fluxen is a fast, full-stack personal task management application built with Python FastAPI, SQLite, and React (TypeScript + Vite + Tailwind CSS).
 
-## Architecture
+## Highlights
 
-The project consists of two clean, decoupled applications:
-
-- `server`: Python FastAPI REST API with SQLAlchemy ORM and an automatic local SQLite database (`fluxen.db`).
-- `client`: React SPA built with TypeScript, Vite, and Tailwind CSS.
+- **Linear-style Quick Add**: Create tasks instantly from the top bar with `Enter`.
+- **Keyboard Shortcuts**: Power-user navigation (`N` for new task, `/` for search, `?` for cheat sheet, `Esc` to close dialogs).
+- **Priority Levels**: Color-coded badges for Urgent, High, Medium, and Low priorities.
+- **Due Dates & Overdue Alerts**: Clear tracking for deadlines with relative indicators (Overdue, Due Today, Tomorrow).
+- **Context Tags**: Filter tasks with custom labels (e.g., `#work`, `#personal`, `#study`).
+- **Undo on Delete**: Non-blocking toast notification allows restoring deleted tasks within 6 seconds.
+- **Data Portability**: Instant one-click export of personal tasks in both CSV and JSON formats.
+- **Decoupled Architecture**: Designed to run across two independent AWS EC2 instances (one for FastAPI, one for React/Nginx).
 
 ---
 
-## Quick Start (Local Setup)
-
-### Prerequisites
-
-- Python 3.10+ (tested on Python 3.13)
-- Node.js 18+ and npm
+## Local Development Setup
 
 ### 1. Start the Backend
 
@@ -36,16 +35,12 @@ The project consists of two clean, decoupled applications:
      source venv/bin/activate
      ```
 
-3. Install dependencies:
+3. Install dependencies and start server:
    ```bash
    pip install -r requirements.txt
-   ```
-
-4. Run the server (auto-creates `fluxen.db`):
-   ```bash
    python run.py
    ```
-   Backend runs at: `http://localhost:5000` (interactive API docs at `http://localhost:5000/docs`).
+   Backend runs at: `http://localhost:5000` (interactive API documentation at `http://localhost:5000/docs`).
 
 ### 2. Start the Frontend
 
@@ -55,10 +50,6 @@ In a second terminal:
    ```bash
    cd client
    npm install
-   ```
-
-2. Start development server:
-   ```bash
    npm run dev
    ```
    Frontend runs at: `http://localhost:5173`.
@@ -80,19 +71,19 @@ venv\Scripts\pytest
 
 ### Overview
 
-- **Instance 1 (Backend)**: Python FastAPI with Uvicorn (managed by systemd or PM2) on port 5000.
-- **Instance 2 (Frontend)**: React production build served via Nginx on port 80.
+- **Instance 1 (Backend)**: Python FastAPI with Uvicorn (managed by systemd) on port 5000.
+- **Instance 2 (Frontend)**: React production build served via Nginx on port 80 with reverse proxy to backend.
 
-### Step 1: Launch Two EC2 Instances
+### Step 1: Launch Instances
 
-Launch two Amazon EC2 Ubuntu instances (`t3.micro` or `t3.nano`):
+Launch two Amazon EC2 Ubuntu instances (`t3.micro` or `t2.micro`):
 1. `fluxen-backend`
 2. `fluxen-frontend`
 
 ### Step 2: Configure Security Groups
 
-- **Backend SG**: Inbound TCP port 5000 (from anywhere or restricted to Frontend IP), port 22 (SSH).
-- **Frontend SG**: Inbound TCP port 80 (HTTP) and port 443 (HTTPS) from anywhere, port 22 (SSH).
+- **Backend SG**: Port 22 (SSH) open to Frontend instance or management IP.
+- **Frontend SG**: Port 80 (HTTP) and Port 22 (SSH) open to Anywhere (`0.0.0.0/0`).
 
 ---
 
@@ -100,66 +91,15 @@ Launch two Amazon EC2 Ubuntu instances (`t3.micro` or `t3.nano`):
 
 1. SSH into the backend instance:
    ```bash
-   ssh -i your-key.pem ubuntu@<BACKEND_PUBLIC_IP>
+   ssh -i fluxen-key.pem ubuntu@<BACKEND_PUBLIC_IP>
    ```
 
-2. Install Python and Git:
-   ```bash
-   sudo apt update && sudo apt upgrade -y
-   sudo apt install -y python3-pip python3-venv git
-   ```
-
-3. Clone the repository:
+2. Run automated setup:
    ```bash
    git clone https://github.com/vansh917917/fluxen.git
-   cd fluxen/server
-   ```
-
-4. Set up virtual environment and install dependencies:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-
-5. Configure `.env`:
-   ```bash
-   cat << 'EOF' > .env
-   PORT=5000
-   NODE_ENV=production
-   CLIENT_URL=http://<FRONTEND_PUBLIC_IP>
-   DATABASE_URL=sqlite:///./fluxen.db
-   JWT_SECRET=generate_a_secure_random_secret_here
-   EOF
-   ```
-
-6. Run FastAPI as a systemd service:
-   ```bash
-   sudo cat << 'EOF' > /etc/systemd/system/fluxen.service
-   [Unit]
-   Description=Fluxen FastAPI Backend Service
-   After=network.target
-
-   [Service]
-   User=ubuntu
-   WorkingDirectory=/home/ubuntu/fluxen/server
-   ExecStart=/home/ubuntu/fluxen/server/venv/bin/python run.py
-   Restart=always
-   RestartSec=5
-   EnvironmentFile=/home/ubuntu/fluxen/server/.env
-
-   [Install]
-   WantedBy=multi-user.target
-   EOF
-
-   sudo systemctl daemon-reload
-   sudo systemctl enable fluxen
-   sudo systemctl start fluxen
-   ```
-
-7. Check health:
-   ```bash
-   curl http://localhost:5000/health
+   cd fluxen
+   chmod +x deploy_backend.sh
+   ./deploy_backend.sh
    ```
 
 ---
@@ -168,46 +108,18 @@ Launch two Amazon EC2 Ubuntu instances (`t3.micro` or `t3.nano`):
 
 1. SSH into the frontend instance:
    ```bash
-   ssh -i your-key.pem ubuntu@<FRONTEND_PUBLIC_IP>
+   ssh -i fluxen-key.pem ubuntu@<FRONTEND_PUBLIC_IP>
    ```
 
-2. Install Node.js, Git, and Nginx:
-   ```bash
-   sudo apt update && sudo apt upgrade -y
-   sudo apt install -y git nginx curl
-   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-   sudo apt install -y nodejs
-   ```
-
-3. Clone repository and install dependencies:
+2. Run automated setup:
    ```bash
    git clone https://github.com/vansh917917/fluxen.git
-   cd fluxen/client
-   npm install
+   cd fluxen
+   chmod +x deploy_frontend.sh
+   ./deploy_frontend.sh
    ```
 
-4. Configure `.env` with backend EC2 IP:
-   ```bash
-   echo "VITE_API_BASE_URL=http://<BACKEND_PUBLIC_IP>:5000/api" > .env
-   ```
-
-5. Build the React frontend:
-   ```bash
-   npm run build
-   ```
-
-6. Deploy to Nginx:
-   ```bash
-   sudo mkdir -p /var/www/fluxen
-   sudo cp -r dist/* /var/www/fluxen/
-   sudo cp nginx.conf /etc/nginx/sites-available/fluxen
-   sudo ln -sf /etc/nginx/sites-available/fluxen /etc/nginx/sites-enabled/
-   sudo rm -f /etc/nginx/sites-enabled/default
-   sudo nginx -t
-   sudo systemctl restart nginx
-   ```
-
-7. Open `http://<FRONTEND_PUBLIC_IP>` in your browser.
+3. Open `http://<FRONTEND_PUBLIC_IP>` in your browser.
 
 ---
 
@@ -220,14 +132,16 @@ Launch two Amazon EC2 Ubuntu instances (`t3.micro` or `t3.nano`):
 | POST | `/api/auth/register` | Register a new user | No |
 | POST | `/api/auth/login` | Authenticate an existing user | No |
 | POST | `/api/auth/logout` | End user session | No |
-| GET | `/api/auth/me` | Fetch authenticated user data | Yes |
+| GET | `/api/auth/me` | Fetch authenticated user profile | Yes |
 
 ### Tasks
 
 | Method | Endpoint | Description | Auth Required |
 |---|---|---|---|
-| GET | `/api/tasks` | Get user tasks (supports `?status=all/pending/completed`) | Yes |
+| GET | `/api/tasks` | Get user tasks (supports `status`, `priority`, `tag`, `sort`) | Yes |
+| GET | `/api/tasks/stats` | Retrieve progress metrics (total, pending, done today, overdue, urgent) | Yes |
+| GET | `/api/tasks/export` | Export tasks as JSON or CSV (`?format=json` or `csv`) | Yes |
 | POST | `/api/tasks` | Create a new task | Yes |
 | GET | `/api/tasks/:id` | Get specific task by ID | Yes |
-| PATCH | `/api/tasks/:id` | Update task title, description, or completed status | Yes |
+| PATCH | `/api/tasks/:id` | Update task title, description, priority, due date, or tag | Yes |
 | DELETE | `/api/tasks/:id` | Delete a task | Yes |
