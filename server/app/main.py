@@ -3,13 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from app.database import engine, Base
+from app.database import engine, Base, run_migrations
 from app.config import CLIENT_URL
 from app.routers.auth import router as auth_router
 from app.routers.tasks import router as tasks_router
 
-# Create SQLite/PostgreSQL database tables on startup
+# Create SQLite/PostgreSQL database tables and run schema migrations
 Base.metadata.create_all(bind=engine)
+run_migrations()
 
 app = FastAPI(
     title="Fluxen API",
