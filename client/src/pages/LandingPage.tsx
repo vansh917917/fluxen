@@ -20,20 +20,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         </h1>
 
         <p className="mt-5 text-base sm:text-lg text-slate-600 max-w-xl mx-auto leading-relaxed">
-          Fluxen provides personal task tracking with instant updates, user authentication, and persistent PostgreSQL storage.
+          Fluxen delivers personal task tracking with instant updates, secure token authentication, and reliable persistent storage.
         </p>
 
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             onClick={() => onNavigate('register')}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md shadow-sm transition-colors"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-md shadow-sm hover:shadow transition-all cursor-pointer"
           >
             <span>Get Started</span>
             <ArrowRight className="w-4 h-4" />
           </button>
           <button
             onClick={() => onNavigate('login')}
-            className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 rounded-md shadow-2xs transition-colors"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 active:scale-95 border border-slate-300 rounded-md shadow-2xs hover:border-slate-400 transition-all cursor-pointer"
           >
             Sign In
           </button>
@@ -43,20 +43,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       {/* Feature Pillars */}
       <div className="max-w-4xl mx-auto mt-20 px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 bg-white rounded-lg border border-slate-200">
-            <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center text-slate-800 mb-4">
+          <div className="p-6 bg-white rounded-lg border border-slate-200 hover:border-slate-300 hover:shadow-xs transition-all duration-150">
+            <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center text-slate-800 mb-4 shadow-2xs">
               <LayoutList className="w-5 h-5" />
             </div>
             <h2 className="text-sm font-semibold text-slate-900 mb-1">
               Personal Dashboard
             </h2>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Create, filter, edit, and mark tasks complete with immediate feedback on desktop and mobile.
+              Create, filter, edit, and mark tasks complete with keyboard shortcuts and immediate feedback on desktop and mobile.
             </p>
           </div>
 
-          <div className="p-6 bg-white rounded-lg border border-slate-200">
-            <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center text-slate-800 mb-4">
+          <div className="p-6 bg-white rounded-lg border border-slate-200 hover:border-slate-300 hover:shadow-xs transition-all duration-150">
+            <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center text-slate-800 mb-4 shadow-2xs">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <h2 className="text-sm font-semibold text-slate-900 mb-1">
@@ -67,15 +67,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             </p>
           </div>
 
-          <div className="p-6 bg-white rounded-lg border border-slate-200">
-            <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center text-slate-800 mb-4">
+          <div className="p-6 bg-white rounded-lg border border-slate-200 hover:border-slate-300 hover:shadow-xs transition-all duration-150">
+            <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center text-slate-800 mb-4 shadow-2xs">
               <Database className="w-5 h-5" />
             </div>
             <h2 className="text-sm font-semibold text-slate-900 mb-1">
-              PostgreSQL Persistence
+              Persistent Storage
             </h2>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Data durability via Prisma ORM. Refresh the page or log in from any device to see your tasks.
+              FastAPI backend with structured SQLite persistence, automatic schema migrations, and automated backups.
             </p>
           </div>
         </div>

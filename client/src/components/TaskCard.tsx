@@ -46,7 +46,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     if (!task.dueDate) return null;
     const due = new Date(task.dueDate);
     const now = new Date();
-    // Normalize to start of day
     const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const diffDays = Math.round((dueDay - today) / (1000 * 60 * 60 * 24));
@@ -69,23 +68,23 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const priorityBadge = (() => {
     switch (task.priority) {
       case 'urgent':
-        return { label: 'Urgent', style: 'bg-rose-50 text-rose-700 border-rose-200' };
+        return { label: 'Urgent', style: 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100' };
       case 'high':
-        return { label: 'High', style: 'bg-amber-50 text-amber-700 border-amber-200' };
+        return { label: 'High', style: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' };
       case 'medium':
-        return { label: 'Medium', style: 'bg-blue-50 text-blue-700 border-blue-200' };
+        return { label: 'Medium', style: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' };
       case 'low':
       default:
-        return { label: 'Low', style: 'bg-slate-100 text-slate-600 border-slate-200' };
+        return { label: 'Low', style: 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200/80' };
     }
   })();
 
   return (
     <div
-      className={`p-4 rounded-lg border transition-all ${
+      className={`group relative p-4 rounded-lg border transition-all duration-150 ease-out ${
         task.completed
-          ? 'bg-slate-50/60 border-slate-200 opacity-80'
-          : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
+          ? 'bg-slate-50/60 border-slate-200/90 hover:border-slate-300 opacity-75'
+          : 'bg-white border-slate-200 hover:border-slate-300/90 hover:shadow-xs'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -98,19 +97,23 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             aria-label={
               task.completed ? 'Mark task as pending' : 'Mark task as completed'
             }
-            className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center shrink-0 border transition-colors ${
+            className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center shrink-0 border transition-all duration-150 active:scale-90 ${
               task.completed
-                ? 'bg-emerald-600 border-emerald-600 text-white'
-                : 'border-slate-300 hover:border-slate-500 bg-white'
+                ? 'bg-emerald-600 border-emerald-600 text-white shadow-2xs'
+                : 'border-slate-300 hover:border-slate-500 bg-white hover:bg-slate-50'
             }`}
           >
-            {task.completed && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+            {task.completed ? (
+              <Check className="w-3.5 h-3.5 stroke-[3]" />
+            ) : (
+              <Check className="w-3 h-3 stroke-[2.5] text-slate-300 opacity-0 group-hover:opacity-40 transition-opacity" />
+            )}
           </button>
 
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <h3
-                className={`text-sm break-words ${
+                className={`text-sm break-words transition-colors duration-150 ${
                   task.completed
                     ? 'line-through text-slate-400 font-medium'
                     : 'text-slate-900 font-semibold'
@@ -121,7 +124,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
               {/* Priority badge */}
               <span
-                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${priorityBadge.style}`}
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border transition-colors ${priorityBadge.style}`}
               >
                 <Flag className="w-2.5 h-2.5" />
                 {priorityBadge.label}
@@ -132,7 +135,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 <button
                   type="button"
                   onClick={() => onTagClick?.(task.tag!)}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors"
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 hover:bg-slate-200/90 text-slate-700 border border-slate-200 active:scale-95 transition-all"
+                  title={`Filter by #${task.tag}`}
                 >
                   <TagIcon className="w-2.5 h-2.5 text-slate-500" />
                   #{task.tag}
@@ -154,7 +158,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <div className="mt-2.5 flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
               {dueDateInfo && (
                 <span
-                  className={`inline-flex items-center gap-1 font-medium ${
+                  className={`inline-flex items-center gap-1 font-medium transition-colors ${
                     dueDateInfo.isOverdue
                       ? 'text-rose-600 font-bold'
                       : dueDateInfo.isToday
@@ -180,14 +184,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons with subtle desktop hover visibility */}
         <div className="flex items-center gap-1 shrink-0">
           {!confirmDelete ? (
-            <>
+            <div className="flex items-center gap-1 sm:opacity-50 sm:group-hover:opacity-100 transition-opacity duration-150">
               <button
                 type="button"
                 onClick={() => onEdit(task)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 active:scale-90 rounded-md transition-all"
                 title="Edit task"
                 aria-label="Edit task"
               >
@@ -196,15 +200,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               <button
                 type="button"
                 onClick={() => setConfirmDelete(true)}
-                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 active:scale-90 rounded-md transition-all"
                 title="Delete task"
                 aria-label="Delete task"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
-            </>
+            </div>
           ) : (
-            <div className="flex items-center gap-1.5 p-1 bg-rose-50 border border-rose-200 rounded-md text-xs">
+            <div className="flex items-center gap-1.5 p-1 bg-rose-50 border border-rose-200 rounded-md text-xs animate-in fade-in duration-150">
               <span className="flex items-center gap-1 text-[11px] text-rose-700 font-medium pl-1">
                 <AlertTriangle className="w-3 h-3 text-rose-600" />
                 Delete?
@@ -213,14 +217,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 type="button"
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="px-2 py-0.5 bg-rose-600 text-white rounded text-[11px] font-semibold hover:bg-rose-700 transition-colors disabled:opacity-50"
+                className="px-2 py-0.5 bg-rose-600 text-white rounded text-[11px] font-semibold hover:bg-rose-700 active:scale-95 transition-all disabled:opacity-50"
               >
                 {isDeleting ? '...' : 'Yes'}
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmDelete(false)}
-                className="px-2 py-0.5 text-slate-600 hover:text-slate-900 rounded text-[11px] font-medium"
+                className="px-2 py-0.5 text-slate-600 hover:text-slate-900 active:scale-95 rounded text-[11px] font-medium transition-all"
               >
                 No
               </button>

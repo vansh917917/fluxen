@@ -39,7 +39,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
 
   return (
     <div className="py-12 sm:py-16 px-4">
-      <div className="max-w-md mx-auto bg-white p-6 sm:p-8 rounded-lg border border-slate-200 shadow-sm">
+      <div className="max-w-md mx-auto bg-white p-6 sm:p-8 rounded-lg border border-slate-200 shadow-xs hover:border-slate-300/80 transition-all duration-150">
         <div className="mb-6">
           <h1 className="text-xl font-bold text-slate-900">Sign In</h1>
           <p className="mt-1 text-xs text-slate-500">
@@ -48,7 +48,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-md flex items-start gap-2.5 text-xs text-rose-700">
+          <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-md flex items-start gap-2.5 text-xs text-rose-700 animate-in fade-in duration-150">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -70,7 +70,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 text-sm text-slate-900 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+              className="w-full px-3 py-2 text-sm text-slate-900 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
             />
           </div>
 
@@ -89,14 +89,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
               placeholder="Your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 text-sm text-slate-900 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+              className="w-full px-3 py-2 text-sm text-slate-900 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
             />
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md shadow-xs transition-colors disabled:opacity-50"
+            className="w-full mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-md shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
           >
             {submitting ? (
               <>
@@ -118,7 +118,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
             <button
               type="button"
               onClick={() => onNavigate('register')}
-              className="font-semibold text-slate-900 hover:underline"
+              className="font-semibold text-slate-900 hover:underline cursor-pointer"
             >
               Register here
             </button>

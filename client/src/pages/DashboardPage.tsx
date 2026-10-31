@@ -297,10 +297,10 @@ export const DashboardPage: React.FC = () => {
 
         <div className="flex items-center gap-2">
           {/* Export dropdown */}
-          <div className="inline-flex rounded-md border border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-2xs">
+          <div className="inline-flex rounded-md border border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-2xs overflow-hidden">
             <button
               onClick={() => handleExport('csv')}
-              className="px-2.5 py-1.5 hover:bg-slate-50 flex items-center gap-1 border-r border-slate-200"
+              className="px-2.5 py-1.5 hover:bg-slate-50 hover:text-slate-900 active:scale-95 flex items-center gap-1 border-r border-slate-200 transition-all"
               title="Export as CSV spreadsheet"
             >
               <Download className="w-3.5 h-3.5 text-slate-500" />
@@ -308,7 +308,7 @@ export const DashboardPage: React.FC = () => {
             </button>
             <button
               onClick={() => handleExport('json')}
-              className="px-2.5 py-1.5 hover:bg-slate-50"
+              className="px-2.5 py-1.5 hover:bg-slate-50 hover:text-slate-900 active:scale-95 transition-all"
               title="Export as JSON"
             >
               JSON
@@ -320,7 +320,7 @@ export const DashboardPage: React.FC = () => {
               setEditingTask(null);
               setIsModalOpen(true);
             }}
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md shadow-xs transition-colors"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-md shadow-xs transition-all"
           >
             <Plus className="w-4 h-4" />
             <span>New Task</span>
@@ -330,7 +330,7 @@ export const DashboardPage: React.FC = () => {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 my-6">
-        <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs">
+        <div className="p-3 bg-white hover:border-slate-300 hover:shadow-xs rounded-lg border border-slate-200 shadow-2xs transition-all duration-150">
           <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
             <ListTodo className="w-3.5 h-3.5 text-slate-700" />
             <span>Pending Tasks</span>
@@ -340,7 +340,7 @@ export const DashboardPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs">
+        <div className="p-3 bg-white hover:border-emerald-200 hover:bg-emerald-50/20 hover:shadow-xs rounded-lg border border-slate-200 shadow-2xs transition-all duration-150">
           <div className="flex items-center gap-1.5 text-[11px] text-emerald-700 font-medium">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             <span>Done Today</span>
@@ -355,7 +355,7 @@ export const DashboardPage: React.FC = () => {
             setFilter('pending');
             setPriorityFilter('urgent');
           }}
-          className="p-3 bg-white hover:bg-rose-50/50 rounded-lg border border-slate-200 cursor-pointer shadow-2xs transition-colors"
+          className="p-3 bg-white hover:bg-rose-50/40 hover:border-rose-200 hover:-translate-y-0.5 active:scale-[0.98] rounded-lg border border-slate-200 cursor-pointer shadow-2xs transition-all duration-150"
           title="Click to filter urgent tasks"
         >
           <div className="flex items-center gap-1.5 text-[11px] text-rose-700 font-medium">
@@ -372,7 +372,7 @@ export const DashboardPage: React.FC = () => {
             setFilter('pending');
             setSortBy('dueDate');
           }}
-          className="p-3 bg-white hover:bg-amber-50/50 rounded-lg border border-slate-200 cursor-pointer shadow-2xs transition-colors"
+          className="p-3 bg-white hover:bg-amber-50/40 hover:border-amber-200 hover:-translate-y-0.5 active:scale-[0.98] rounded-lg border border-slate-200 cursor-pointer shadow-2xs transition-all duration-150"
           title="Click to sort by due date"
         >
           <div className="flex items-center gap-1.5 text-[11px] text-amber-700 font-medium">
@@ -397,30 +397,30 @@ export const DashboardPage: React.FC = () => {
           <div className="inline-flex p-1 bg-slate-100 rounded-lg border border-slate-200 text-xs font-medium">
             <button
               onClick={() => setFilter('all')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
+              className={`px-3 py-1.5 rounded-md active:scale-95 transition-all duration-150 ${
                 filter === 'all'
-                  ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-slate-900 shadow-2xs font-semibold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
             >
               All
             </button>
             <button
               onClick={() => setFilter('pending')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
+              className={`px-3 py-1.5 rounded-md active:scale-95 transition-all duration-150 ${
                 filter === 'pending'
-                  ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-slate-900 shadow-2xs font-semibold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
             >
               Pending
             </button>
             <button
               onClick={() => setFilter('completed')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
+              className={`px-3 py-1.5 rounded-md active:scale-95 transition-all duration-150 ${
                 filter === 'completed'
-                  ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-slate-900 shadow-2xs font-semibold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
             >
               Completed
@@ -429,19 +429,19 @@ export const DashboardPage: React.FC = () => {
 
           {/* Search Bar */}
           <div className="relative flex-1 sm:max-w-xs">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               ref={searchInputRef}
               type="text"
               placeholder="Search tasks... (Press '/')"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8.5 pr-8 py-1.5 text-xs text-slate-900 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900"
+              className="w-full pl-8.5 pr-8 py-1.5 text-xs text-slate-900 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 active:scale-90 transition-all p-0.5"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -457,10 +457,10 @@ export const DashboardPage: React.FC = () => {
               <button
                 key={p}
                 onClick={() => setPriorityFilter(p)}
-                className={`px-2 py-0.5 rounded text-[11px] font-medium capitalize border transition-colors ${
+                className={`px-2 py-0.5 rounded text-[11px] font-medium capitalize border active:scale-95 transition-all ${
                   priorityFilter === p
-                    ? 'bg-slate-900 text-white border-slate-900 font-semibold'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ? 'bg-slate-900 text-white border-slate-900 font-semibold shadow-2xs'
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
                 }`}
               >
                 {p}
@@ -468,11 +468,11 @@ export const DashboardPage: React.FC = () => {
             ))}
 
             {tagFilter && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-slate-900 text-white font-medium ml-2">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-slate-900 text-white font-medium ml-2 shadow-2xs">
                 #{tagFilter}
                 <button
                   onClick={() => setTagFilter(null)}
-                  className="hover:text-rose-300"
+                  className="hover:text-rose-300 active:scale-90 transition-transform"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -486,7 +486,7 @@ export const DashboardPage: React.FC = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="bg-white border border-slate-200 rounded px-2 py-0.5 text-xs text-slate-800 focus:outline-none"
+              className="bg-white border border-slate-200 hover:border-slate-300 rounded px-2 py-0.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900/10 cursor-pointer transition-colors"
             >
               <option value="createdAt">Newest First</option>
               <option value="dueDate">Due Date</option>
@@ -503,7 +503,7 @@ export const DashboardPage: React.FC = () => {
               <button
                 key={t}
                 onClick={() => setTagFilter(t)}
-                className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 hover:bg-slate-200 hover:text-slate-900 text-slate-700 active:scale-95 transition-all"
               >
                 #{t}
               </button>

@@ -21,9 +21,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
         {/* Brand */}
         <button
           onClick={() => onNavigate(user ? 'dashboard' : 'landing')}
-          className="flex items-center gap-2.5 text-left group focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 rounded-sm"
+          className="flex items-center gap-2.5 text-left group focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 rounded-md transition-opacity hover:opacity-90 cursor-pointer"
         >
-          <div className="w-8 h-8 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold shadow-xs">
+          <div className="w-8 h-8 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold shadow-xs transition-transform duration-150 group-hover:scale-105">
             <CheckSquare className="w-4 h-4 text-emerald-400" />
           </div>
           <div>
@@ -40,16 +40,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
         <nav className="flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200">
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200 shadow-2xs">
                 <UserIcon className="w-3.5 h-3.5 text-slate-500" />
                 <span className="max-w-[180px] truncate">{user.email}</span>
               </div>
               <button
                 onClick={handleLogout}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-md border border-slate-200 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-rose-700 hover:bg-rose-50/70 hover:border-rose-200 active:scale-95 rounded-md border border-slate-200 transition-all cursor-pointer"
                 title="Log out of your account"
               >
-                <LogOut className="w-3.5 h-3.5 text-slate-500" />
+                <LogOut className="w-3.5 h-3.5 text-slate-500 group-hover:text-rose-600" />
                 <span>Log out</span>
               </button>
             </div>
@@ -58,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
               {currentView !== 'login' && (
                 <button
                   onClick={() => onNavigate('login')}
-                  className="px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 active:scale-95 rounded-md transition-all cursor-pointer"
                 >
                   Log in
                 </button>
@@ -66,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
               {currentView !== 'register' && (
                 <button
                   onClick={() => onNavigate('register')}
-                  className="px-3 py-1.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-md shadow-xs transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-md shadow-2xs transition-all cursor-pointer"
                 >
                   Register
                 </button>

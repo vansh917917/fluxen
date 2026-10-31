@@ -138,7 +138,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               placeholder="e.g., Review project documentation"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 text-sm text-slate-900 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+              className="w-full px-3 py-2 text-sm text-slate-900 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
               autoFocus
             />
           </div>
@@ -157,7 +157,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               placeholder="Add extra context, requirements, or notes..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 text-sm text-slate-900 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 resize-y"
+              className="w-full px-3 py-2 text-sm text-slate-900 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all resize-y"
             />
           </div>
 
@@ -170,20 +170,20 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             <div className="grid grid-cols-4 gap-2">
               {(
                 [
-                  { level: 'low', label: 'Low', color: 'border-slate-300 text-slate-700' },
-                  { level: 'medium', label: 'Medium', color: 'border-blue-400 text-blue-700' },
-                  { level: 'high', label: 'High', color: 'border-amber-400 text-amber-700' },
-                  { level: 'urgent', label: 'Urgent', color: 'border-rose-400 text-rose-700' },
+                  { level: 'low', label: 'Low', color: 'border-slate-300 text-slate-700 bg-slate-50' },
+                  { level: 'medium', label: 'Medium', color: 'border-blue-300 text-blue-700 bg-blue-50/50' },
+                  { level: 'high', label: 'High', color: 'border-amber-300 text-amber-700 bg-amber-50/50' },
+                  { level: 'urgent', label: 'Urgent', color: 'border-rose-300 text-rose-700 bg-rose-50/50' },
                 ] as const
               ).map((p) => (
                 <button
                   key={p.level}
                   type="button"
                   onClick={() => setPriority(p.level)}
-                  className={`py-1.5 text-xs font-medium rounded-md border text-center transition-all ${
+                  className={`py-1.5 text-xs font-medium rounded-md border text-center active:scale-95 transition-all cursor-pointer ${
                     priority === p.level
-                      ? `${p.color} bg-slate-100 font-bold shadow-2xs ring-1 ring-slate-900`
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                      ? `${p.color} font-bold shadow-2xs ring-1 ring-slate-900/20 border-slate-400`
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
                   }`}
                 >
                   {p.label}
@@ -207,20 +207,20 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs text-slate-900 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="w-full px-3 py-1.5 text-xs text-slate-900 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
               />
-              <div className="flex gap-2 mt-1.5 text-[11px]">
+              <div className="flex items-center gap-1.5 mt-2 text-[11px]">
                 <button
                   type="button"
                   onClick={() => handleQuickDate(0)}
-                  className="text-slate-600 hover:text-slate-900 underline"
+                  className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 transition-all cursor-pointer"
                 >
                   Today
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickDate(1)}
-                  className="text-slate-600 hover:text-slate-900 underline"
+                  className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 transition-all cursor-pointer"
                 >
                   Tomorrow
                 </button>
@@ -228,7 +228,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setDueDate('')}
-                    className="text-rose-600 hover:text-rose-800 underline ml-auto"
+                    className="px-2 py-0.5 rounded text-[11px] font-medium text-rose-600 hover:bg-rose-50 active:scale-95 transition-all ml-auto cursor-pointer"
                   >
                     Clear
                   </button>
@@ -251,7 +251,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 placeholder="e.g. work, personal"
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs text-slate-900 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="w-full px-3 py-1.5 text-xs text-slate-900 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
               />
             </div>
           </div>
@@ -261,14 +261,14 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-4 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-md border border-slate-200 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 active:scale-95 rounded-md border border-slate-200 transition-all disabled:opacity-50 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-md shadow-xs transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-md shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
             >
               {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>{initialTask ? 'Save Changes' : 'Create Task'}</span>
